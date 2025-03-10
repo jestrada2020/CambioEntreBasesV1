@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor Especializado de Bases</title>
+    <style>
+        :root {
+            --primary: #3a4de0;
+            --primary-dark: #2a3bbf;
+            --primary-light: #e0e5ff;
+            --secondary: #ff5722;
+            --dark: #333;
+            --light: #f8f9fa;
+            --error: #e74c3c;
+            --success: #2ecc71;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--primary-light);
+        }
+        
+        .description {
+            margin-bottom: 25px;
+            text-align: center;
+            line-height: 1.6;
+            color: #666;
+        }
+        
+        .converter-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .form-group {
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(58, 77, 224, 0.2);
+        }
+        
+        select {
+            cursor: pointer;
+            background-color: white;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .result-container {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: var(--primary-light);
+            border-radius: 5px;
+            border-left: 4px solid var(--primary);
+            display: none;
+        }
+        
+        .result-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--primary-dark);
+        }
+        
+        .result-text {
+            font-family: monospace;
+            white-space: pre-wrap;
+            padding: 10px;
+            background-color: white;
+            border-radius: 5px;
+            line-height: 1.5;
+            min-height: 60px;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            color: white;
+            display: none;
+        }
+        
+        .alert-error {
+            background-color: var(--error);
+        }
+        
+        .alert-success {
+            background-color: var(--success);
+        }
+        
+        .help-section {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid var(--primary-light);
+        }
+        
+        .help-title {
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+        
+        .help-content {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid var(--secondary);
+        }
+        
+        .collapsible {
+            cursor: pointer;
+            padding: 15px;
+            width: 100%;
+            text-align: left;
+            background-color: #f1f1f1;
+            border: none;
+            border-radius: 5px;
+            outline: none;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .active, .collapsible:hover {
+            background-color: #ddd;
+        }
+        
+        .collapsible:after {
+            content: '\002B';
+            font-weight: bold;
+            float: right;
+            margin-left: 5px;
+        }
+        
+        .active:after {
+            content: "\2212";
+        }
+        
+        .content {
+            padding: 0 15px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.2s ease-out;
+            margin-bottom: 15px;
+            background-color: white;
+            border-radius: 0 0 5px 5px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+        }
+        
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .conversion-steps {
+            margin-top: 20px;
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .input-group {
+                flex-direction: column;
+            }
+        }
+        
+        footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 14px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Conversor Especializado de Bases</h1>
+        <p class="description">Esta aplicación permite convertir texto alfanumérico entre diferentes bases numéricas (hasta base 45).<br>Especialmente útil para convertir entre bases del 10 al 31, incluyendo la conversión de base 31 a base 26 con la disposición específica de letras.</p>
+        
+        <div id="alert" class="alert"></div>
+        
+        <div class="converter-container">
+            <div class="input-group">
+                <div class="form-group">
+                    <label for="inputText">Texto a convertir:</label>
+                    <textarea id="inputText" placeholder="Ej: DISCRETAS"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="fromBase">Desde base:</label>
+                    <select id="fromBase">
+                        <option value="31" selected>Base 31</option>
+                        <option value="26">Base 26</option>
+                        <option value="10">Base 10 (Decimal)</option>
+                        <option value="11">Base 11</option>
+                        <option value="12">Base 12</option>
+                        <option value="13">Base 13</option>
+                        <option value="14">Base 14</option>
+                        <option value="15">Base 15</option>
+                        <option value="16">Base 16 (Hexadecimal)</option>
+                        <option value="17">Base 17</option>
+                        <option value="18">Base 18</option>
+                        <option value="19">Base 19</option>
+                        <option value="20">Base 20</option>
+                        <option value="21">Base 21</option>
+                        <option value="22">Base 22</option>
+                        <option value="23">Base 23</option>
+                        <option value="24">Base 24</option>
+                        <option value="25">Base 25</option>
+                        <option value="27">Base 27</option>
+                        <option value="28">Base 28</option>
+                        <option value="29">Base 29</option>
+                        <option value="30">Base 30</option>
+                        <option value="2">Base 2 (Binario)</option>
+                        <option value="8">Base 8 (Octal)</option>
+                        <option value="37">Base 37</option>
+                        <option value="custom">Personalizada</option>
+                    </select>
+                    <div id="customFromBase" style="display: none; margin-top: 10px;">
+                        <label for="customFromBaseValue">Valor de base personalizada (2-45):</label>
+                        <input type="number" id="customFromBaseValue" min="2" max="45" value="31">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="toBase">A base:</label>
+                    <select id="toBase">
+                        <option value="31">Base 31</option>
+                        <option value="26" selected>Base 26</option>
+                        <option value="10">Base 10 (Decimal)</option>
+                        <option value="11">Base 11</option>
+                        <option value="12">Base 12</option>
+                        <option value="13">Base 13</option>
+                        <option value="14">Base 14</option>
+                        <option value="15">Base 15</option>
+                        <option value="16">Base 16 (Hexadecimal)</option>
+                        <option value="17">Base 17</option>
+                        <option value="18">Base 18</option>
+                        <option value="19">Base 19</option>
+                        <option value="20">Base 20</option>
+                        <option value="21">Base 21</option>
+                        <option value="22">Base 22</option>
+                        <option value="23">Base 23</option>
+                        <option value="24">Base 24</option>
+                        <option value="25">Base 25</option>
+                        <option value="27">Base 27</option>
+                        <option value="28">Base 28</option>
+                        <option value="29">Base 29</option>
+                        <option value="30">Base 30</option>
+                        <option value="2">Base 2 (Binario)</option>
+                        <option value="8">Base 8 (Octal)</option>
+                        <option value="37">Base 37</option>
+                        <option value="custom">Personalizada</option>
+                    </select>
+                    <div id="customToBase" style="display: none; margin-top: 10px;">
+                        <label for="customToBaseValue">Valor de base personalizada (2-45):</label>
+                        <input type="number" id="customToBaseValue" min="2" max="45" value="26">
+                    </div>
+                </div>
+            </div>
+            
+            <button id="convertBtn" class="btn">Convertir</button>
+            
+            <div id="resultContainer" class="result-container">
+                <div class="result-title">Resultado de la conversión:</div>
+                <div id="resultText" class="result-text"></div>
+            </div>
+            
+            <div id="conversionSteps" class="conversion-steps">
+                <h3>Proceso de conversión paso a paso:</h3>
+                <div id="stepsContent"></div>
+            </div>
+        </div>
+        
+        <div class="help-section">
+            <button class="collapsible">Tabla de Valores en Diferentes Bases</button>
+            <div class="content">
+                <p>Esta es la disposición de símbolos según la imagen proporcionada:</p>
+                <table>
+                    <tr>
+                        <th>Símbolo</th>
+                        <th>Valor</th>
+                        <th>Símbolo</th>
+                        <th>Valor</th>
+                        <th>Símbolo</th>
+                        <th>Valor</th>
+                    </tr>
+                    <tr>
+                        <td>0-9</td>
+                        <td>0-9</td>
+                        <td>A</td>
+                        <td>10</td>
+                        <td>N</td>
+                        <td>23</td>
+                    </tr>
+                    <tr>
+                        <td>B</td>
+                        <td>11</td>
+                        <td>Ñ</td>
+                        <td>24</td>
+                        <td>V</td>
+                        <td>31</td>
+                    </tr>
+                    <tr>
+                        <td>C</td>
+                        <td>12</td>
+                        <td>O</td>
+                        <td>25</td>
+                        <td>W</td>
+                        <td>32</td>
+                    </tr>
+                    <tr>
+                        <td>D</td>
+                        <td>13</td>
+                        <td>P</td>
+                        <td>26</td>
+                        <td>X</td>
+                        <td>33</td>
+                    </tr>
+                    <tr>
+                        <td>E</td>
+                        <td>14</td>
+                        <td>Q</td>
+                        <td>27</td>
+                        <td>Y</td>
+                        <td>34</td>
+                    </tr>
+                    <tr>
+                        <td>F</td>
+                        <td>15</td>
+                        <td>R</td>
+                        <td>28</td>
+                        <td>Z</td>
+                        <td>35</td>
+                    </tr>
+                    <tr>
+                        <td>G</td>
+                        <td>16</td>
+                        <td>S</td>
+                        <td>29</td>
+                        <td>a</td>
+                        <td>36</td>
+                    </tr>
+                    <tr>
+                        <td>H</td>
+                        <td>17</td>
+                        <td>T</td>
+                        <td>30</td>
+                        <td>b</td>
+                        <td>37</td>
+                    </tr>
+                    <tr>
+                        <td>I</td>
+                        <td>18</td>
+                        <td>U</td>
+                        <td>31</td>
+                        <td>c</td>
+                        <td>38</td>
+                    </tr>
+                    <tr>
+                        <td>J</td>
+                        <td>19</td>
+                        <td>V</td>
+                        <td>32</td>
+                        <td>d</td>
+                        <td>39</td>
+                    </tr>
+                    <tr>
+                        <td>K</td>
+                        <td>20</td>
+                        <td>W</td>
+                        <td>33</td>
+                        <td>e</td>
+                        <td>40</td>
+                    </tr>
+                    <tr>
+                        <td>L</td>
+                        <td>21</td>
+                        <td>X</td>
+                        <td>34</td>
+                        <td>f</td>
+                        <td>41</td>
+                    </tr>
+                    <tr>
+                        <td>M</td>
+                        <td>22</td>
+                        <td>Y</td>
+                        <td>35</td>
+                        <td>g</td>
+                        <td>42</td>
+                    </tr>
+                    <tr>
+                        <td>N</td>
+                        <td>23</td>
+                        <td>Z</td>
+                        <td>36</td>
+                        <td>h</td>
+                        <td>43</td>
+                    </tr>
+                    <tr>
+                        <td>Ñ</td>
+                        <td>24</td>
+                        <td>@</td>
+                        <td>37</td>
+                        <td>i</td>
+                        <td>44</td>
+                    </tr>
+                </table>
+                <p>Una forma fácil de recordar el valor de cada letra es sumar 9 a su posición en el alfabeto. Por ejemplo: C es la tercera letra, entonces C = 3 + 9 = 12.</p>
+            </div>
+            
+            <button class="collapsible">¿Cómo funciona la conversión entre bases?</button>
+            <div class="content">
+                <p>La conversión entre bases numéricas sigue estos pasos:</p>
+                <ol>
+                    <li><strong>De cualquier base a decimal (base 10):</strong>
+                        <ul>
+                            <li>Cada dígito se multiplica por la base elevada a la potencia correspondiente a su posición (de derecha a izquierda, empezando por 0).</li>
+                            <li>Se suman todos estos productos.</li>
+                            <li>Ejemplo: En base 31, "DISCRETAS" se convierte a decimal siguiendo esa fórmula.</li>
+                        </ul>
+                    </li>
+                    <li><strong>De decimal a cualquier otra base:</strong>
+                        <ul>
+                            <li>Se divide el número decimal por la base de destino repetidamente.</li>
+                            <li>Se registran los residuos de cada división.</li>
+                            <li>Se leen los residuos en orden inverso (de abajo hacia arriba).</li>
+                        </ul>
+                    </li>
+                </ol>
+                <p>En este conversor, estas operaciones se realizan automáticamente y se muestra el proceso detallado paso a paso.</p>
+            </div>
+        </div>
+        
+        <footer>
+            &copy; 2025 Conversor Especializado de Bases Numéricas
+        </footer>
+    </div>
+
+    <script>
+        // Manejar los collapsibles
+        const coll = document.getElementsByClassName("collapsible");
+        for (let i = 0; i < coll.length; i++) {
+            coll[i].addEventListener("click", function() {
+                this.classList.toggle("active");
+                const content = this.nextElementSibling;
+                if (content.style.maxHeight) {
+                    content.style.maxHeight = null;
+                } else {
+                    content.style.maxHeight = content.scrollHeight + "px";
+                }
+            });
+        }
+        
+        // Manejar las bases personalizadas
+        document.getElementById('fromBase').addEventListener('change', function() {
+            document.getElementById('customFromBase').style.display = 
+                this.value === 'custom' ? 'block' : 'none';
+        });
+        
+        document.getElementById('toBase').addEventListener('change', function() {
+            document.getElementById('customToBase').style.display = 
+                this.value === 'custom' ? 'block' : 'none';
+        });
+        
+        // Caracteres para diferentes bases
+        const DIGITS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmñopqrstuvwxyz@#$%^&*";
+        
+        // Mapeo especial con la disposición de letras según la imagen
+        // Hasta la base 45 (0-44)
+        const SPECIAL_MAP = {
+            "0": 0, "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9,
+            "A": 10, "B": 11, "C": 12, "D": 13, "E": 14, "F": 15, "G": 16, "H": 17, "I": 18,
+            "J": 19, "K": 20, "L": 21, "M": 22, "N": 23, "Ñ": 24, "O": 25, "P": 26, "Q": 27,
+            "R": 28, "S": 29, "T": 30, "U": 31, "V": 32, "W": 33, "X": 34, "Y": 35, "Z": 36,
+            "a": 36, "b": 37, "c": 38, "d": 39, "e": 40, "f": 41, "g": 42, "h": 43, "i": 44,
+            "@": 37,
+            "á": 36, "é": 40, "í": 44, // Acentos como alternativa
+            "à": 36, "è": 40, "ì": 44, // Otras alternativas
+            // Versiones en minúsculas para ser flexible
+            "ñ": 24, 
+            "u": 31, "v": 32, "w": 33, "x": 34, "y": 35, "z": 36
+        };
+        
+        // Mapeo inverso - de valor a símbolo
+        const REVERSE_MAP = [
+            "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+            "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
+            "N", "Ñ", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
+            "a", "b", "c", "d", "e", "f", "g", "h", "i"
+        ];
+
+        // Función para mostrar un mensaje de alerta
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = 'alert alert-' + type;
+            alert.style.display = 'block';
+            
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Convertir de cualquier base a decimal
+        function toDecimal(text, fromBase) {
+            let result = 0;
+            let steps = [];
+            
+            steps.push(`<strong>Convertir "${text}" de base ${fromBase} a decimal:</strong>`);
+            
+            // Verificar si todos los caracteres son válidos para la base
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                let digit;
+                
+                // Usar el mapeo especial o el estándar según la base
+                if (SPECIAL_MAP[char] !== undefined) {
+                    digit = SPECIAL_MAP[char];
+                } else {
+                    digit = DIGITS.indexOf(char);
+                }
+                
+                if (digit === -1 || digit >= fromBase) {
+                    throw new Error(`Carácter no válido '${char}' para base ${fromBase}`);
+                }
+            }
+            
+            // Realizar la conversión a decimal
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                let digit;
+                
+                if (SPECIAL_MAP[char] !== undefined) {
+                    digit = SPECIAL_MAP[char];
+                } else {
+                    digit = DIGITS.indexOf(char);
+                }
+                
+                const position = text.length - 1 - i;
+                const power = Math.pow(fromBase, position);
+                const value = digit * power;
+                
+                result += value;
+                
+                steps.push(`Posición ${position}: ${char} (valor ${digit}) × ${fromBase}<sup>${position}</sup> = ${value}`);
+            }
+            
+            steps.push(`<strong>Suma total = ${result}</strong>`);
+            
+            return {
+                result,
+                steps
+            };
+        }
+        
+        // Convertir de decimal a cualquier base
+        function fromDecimal(decimal, toBase) {
+            if (decimal === 0) return { result: "0", steps: ["0 en base 10 = 0 en base " + toBase] };
+            
+            let result = "";
+            let steps = [];
+            let num = decimal;
+            let step = 1;
+            
+            steps.push(`<strong>Convertir ${decimal} a base ${toBase}:</strong>`);
+            
+            while (num > 0) {
+                const remainder = num % toBase;
+                let char;
+                
+                // Usar el mapeo inverso para obtener el símbolo
+                if (remainder < REVERSE_MAP.length) {
+                    char = REVERSE_MAP[remainder];
+                } else {
+                    char = DIGITS[remainder];
+                }
+                
+                steps.push(`Paso ${step}: ${num} ÷ ${toBase} = ${Math.floor(num / toBase)} con residuo ${remainder} (${char})`);
+                
+                result = char + result;
+                num = Math.floor(num / toBase);
+                step++;
+            }
+            
+            steps.push(`<strong>Resultado en base ${toBase}: ${result}</strong>`);
+            
+            return {
+                result,
+                steps
+            };
+        }
+        
+        // Función principal de conversión
+        function convertBase() {
+            const inputText = document.getElementById('inputText').value.trim();
+            
+            if (!inputText) {
+                showAlert("Por favor ingresa un texto para convertir", "error");
+                return;
+            }
+            
+            // Determinar las bases
+            let fromBase = document.getElementById('fromBase').value;
+            let toBase = document.getElementById('toBase').value;
+            
+            if (fromBase === 'custom') {
+                fromBase = parseInt(document.getElementById('customFromBaseValue').value);
+            } else {
+                fromBase = parseInt(fromBase);
+            }
+            
+            if (toBase === 'custom') {
+                toBase = parseInt(document.getElementById('customToBaseValue').value);
+            } else {
+                toBase = parseInt(toBase);
+            }
+            
+            // Validar las bases
+            if (fromBase < 2 || fromBase > 45) {
+                showAlert("La base de origen debe estar entre 2 y 45", "error");
+                return;
+            }
+            
+            if (toBase < 2 || toBase > 45) {
+                showAlert("La base de destino debe estar entre 2 y 45", "error");
+                return;
+            }
+            
+            // Realizar la conversión
+            try {
+                let steps = [];
+                
+                // Caso especial: si las bases son iguales
+                if (fromBase === toBase) {
+                    document.getElementById('resultText').textContent = inputText;
+                    document.getElementById('resultContainer').style.display = 'block';
+                    
+                    steps.push("<p>Las bases de origen y destino son iguales, no se requiere conversión.</p>");
+                    document.getElementById('stepsContent').innerHTML = steps.join('');
+                    
+                    showAlert("Conversión completada: El texto ya está en la base solicitada", "success");
+                    return;
+                }
+                
+                // Paso 1: Convertir a decimal
+                let decimal;
+                
+                try {
+                    const result = toDecimal(inputText, fromBase);
+                    decimal = result.result;
+                    steps.push("<h4>PASO 1: Convertir a decimal (base 10)</h4>");
+                    steps.push(`<div style="margin-left: 20px">${result.steps.join('<br>')}</div>`);
+                } catch (error) {
+                    showAlert("Error: " + error.message, "error");
+                    return;
+                }
+                
+                // Paso 2: Convertir de decimal a la base de destino
+                let finalResult;
+                
+                try {
+                    const result = fromDecimal(decimal, toBase);
+                    finalResult = result.result;
+                    steps.push("<h4>PASO 2: Convertir de decimal a la base destino</h4>");
+                    steps.push(`<div style="margin-left: 20px">${result.steps.join('<br>')}</div>`);
+                } catch (error) {
+                    showAlert("Error: " + error.message, "error");
+                    return;
+                }
+                
+                // Mostrar el resultado
+                document.getElementById('resultText').textContent = finalResult;
+                document.getElementById('resultContainer').style.display = 'block';
+                
+                // Mostrar los pasos
+                document.getElementById('stepsContent').innerHTML = steps.join('');
+                
+                showAlert("Conversión completada con éxito", "success");
+                
+            } catch (error) {
+                showAlert("Error: " + error.message, "error");
+            }
+        }
+        
+        // Vincular el botón de conversión
+        document.getElementById('convertBtn').addEventListener('click', convertBase);
+        
+        // También permitir Enter en el campo de texto
+        document.getElementById('inputText').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                convertBase();
+            }
+        });
+        
+        // Preseleccionar y mostrar la tabla de conversión al cargar
+        window.onload = function() {
+            document.getElementsByClassName('collapsible')[0].click();
+        };
+    </script>
+</body>
+</html>
