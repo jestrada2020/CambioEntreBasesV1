@@ -265,7 +265,7 @@
 <body>
     <div class="container">
         <h1>Conversor Especializado de Bases</h1>
-        <p class="description">Esta aplicación permite convertir texto alfanumérico entre diferentes bases numéricas (hasta base 45).<br>Especialmente útil para convertir entre bases del 10 al 31, incluyendo la conversión de base 31 a base 26 con la disposición específica de letras.</p>
+        <p class="description">Esta aplicación permite convertir texto alfanumérico entre diferentes bases numéricas (hasta base 45).<br>Soporta números con punto decimal y es especialmente útil para convertir entre bases del 10 al 31, incluyendo la conversión de base 31 a base 26.</p>
         
         <div id="alert" class="alert"></div>
         
@@ -273,7 +273,7 @@
             <div class="input-group">
                 <div class="form-group">
                     <label for="inputText">Texto a convertir:</label>
-                    <textarea id="inputText" placeholder="Ej: DISCRETAS"></textarea>
+                    <textarea id="inputText" placeholder="Ej: DISCRETAS o 12.5"></textarea>
                 </div>
                 
                 <div class="form-group">
@@ -499,6 +499,34 @@
                 <p>Una forma fácil de recordar el valor de cada letra es sumar 9 a su posición en el alfabeto. Por ejemplo: C es la tercera letra, entonces C = 3 + 9 = 12.</p>
             </div>
             
+            <button class="collapsible">Trabajando con Números Decimales</button>
+            <div class="content">
+                <p>Esta aplicación también soporta la conversión de números con punto decimal entre diferentes bases:</p>
+                <h4>Cómo funciona la conversión de números decimales:</h4>
+                <ol>
+                    <li><strong>De cualquier base a decimal:</strong>
+                        <ul>
+                            <li>Para la parte entera: cada dígito se multiplica por la base elevada a la potencia correspondiente a su posición (de derecha a izquierda, empezando por 0).</li>
+                            <li>Para la parte decimal: cada dígito se multiplica por la base elevada a la potencia negativa correspondiente a su posición (empezando por -1).</li>
+                            <li>Ejemplo: En base 10, "123.45" = 1×10² + 2×10¹ + 3×10⁰ + 4×10⁻¹ + 5×10⁻²</li>
+                        </ul>
+                    </li>
+                    <li><strong>De decimal a cualquier otra base:</strong>
+                        <ul>
+                            <li>Para la parte entera: se divide repetidamente por la base de destino y se toman los residuos.</li>
+                            <li>Para la parte decimal: se multiplica repetidamente por la base de destino y se toman las partes enteras.</li>
+                            <li>Ejemplo para convertir 0.625 decimal a base 2:
+                                <br>0.625 × 2 = 1.25 → Dígito: 1
+                                <br>0.25 × 2 = 0.5 → Dígito: 0
+                                <br>0.5 × 2 = 1.0 → Dígito: 1
+                                <br>Resultado: 0.101 en base 2
+                            </li>
+                        </ul>
+                    </li>
+                </ol>
+                <p>Puedes ingresar números como "10.5" en base 10 o "A.8" en base 16, y la aplicación mostrará el proceso detallado de conversión.</p>
+            </div>
+            
             <button class="collapsible">¿Cómo funciona la conversión entre bases?</button>
             <div class="content">
                 <p>La conversión entre bases numéricas sigue estos pasos:</p>
@@ -599,9 +627,19 @@
             
             steps.push(`<strong>Convertir "${text}" de base ${fromBase} a decimal:</strong>`);
             
-            // Verificar si todos los caracteres son válidos para la base
-            for (let i = 0; i < text.length; i++) {
-                const char = text[i];
+            // Verificar si hay punto decimal
+            const parts = text.split('.');
+            const integerPart = parts[0];
+            const decimalPart = parts.length > 1 ? parts[1] : '';
+            const hasDecimal = parts.length > 1;
+            
+            if (hasDecimal) {
+                steps.push(`Dividiendo la entrada en parte entera "${integerPart}" y parte decimal "${decimalPart}"`);
+            }
+            
+            // Convertir la parte entera
+            for (let i = 0; i < integerPart.length; i++) {
+                const char = integerPart[i];
                 let digit;
                 
                 // Usar el mapeo especial o el estándar según la base
@@ -614,26 +652,42 @@
                 if (digit === -1 || digit >= fromBase) {
                     throw new Error(`Carácter no válido '${char}' para base ${fromBase}`);
                 }
-            }
-            
-            // Realizar la conversión a decimal
-            for (let i = 0; i < text.length; i++) {
-                const char = text[i];
-                let digit;
                 
-                if (SPECIAL_MAP[char] !== undefined) {
-                    digit = SPECIAL_MAP[char];
-                } else {
-                    digit = DIGITS.indexOf(char);
-                }
-                
-                const position = text.length - 1 - i;
+                const position = integerPart.length - 1 - i;
                 const power = Math.pow(fromBase, position);
                 const value = digit * power;
                 
                 result += value;
                 
                 steps.push(`Posición ${position}: ${char} (valor ${digit}) × ${fromBase}<sup>${position}</sup> = ${value}`);
+            }
+            
+            // Convertir la parte decimal si existe
+            if (hasDecimal) {
+                steps.push(`<br><strong>Procesando la parte decimal:</strong>`);
+                
+                for (let i = 0; i < decimalPart.length; i++) {
+                    const char = decimalPart[i];
+                    let digit;
+                    
+                    if (SPECIAL_MAP[char] !== undefined) {
+                        digit = SPECIAL_MAP[char];
+                    } else {
+                        digit = DIGITS.indexOf(char);
+                    }
+                    
+                    if (digit === -1 || digit >= fromBase) {
+                        throw new Error(`Carácter no válido '${char}' para base ${fromBase} en la parte decimal`);
+                    }
+                    
+                    const position = i + 1;
+                    const power = Math.pow(fromBase, -position);
+                    const value = digit * power;
+                    
+                    result += value;
+                    
+                    steps.push(`Posición -${position}: ${char} (valor ${digit}) × ${fromBase}<sup>-${position}</sup> = ${value}`);
+                }
             }
             
             steps.push(`<strong>Suma total = ${result}</strong>`);
@@ -650,30 +704,106 @@
             
             let result = "";
             let steps = [];
-            let num = decimal;
-            let step = 1;
             
-            steps.push(`<strong>Convertir ${decimal} a base ${toBase}:</strong>`);
-            
-            while (num > 0) {
-                const remainder = num % toBase;
-                let char;
-                
-                // Usar el mapeo inverso para obtener el símbolo
-                if (remainder < REVERSE_MAP.length) {
-                    char = REVERSE_MAP[remainder];
-                } else {
-                    char = DIGITS[remainder];
-                }
-                
-                steps.push(`Paso ${step}: ${num} ÷ ${toBase} = ${Math.floor(num / toBase)} con residuo ${remainder} (${char})`);
-                
-                result = char + result;
-                num = Math.floor(num / toBase);
-                step++;
+            // Verificar si el decimal es negativo
+            let isNegative = false;
+            if (decimal < 0) {
+                isNegative = true;
+                decimal = Math.abs(decimal);
+                steps.push(`Número negativo: trabajaremos con su valor absoluto ${decimal}`);
             }
             
-            steps.push(`<strong>Resultado en base ${toBase}: ${result}</strong>`);
+            // Separar la parte entera y decimal
+            const integerPart = Math.floor(decimal);
+            let decimalPart = decimal - integerPart;
+            const hasDecimal = decimalPart > 0;
+            
+            steps.push(`<strong>Convertir ${decimal} a base ${toBase}:</strong>`);
+            if (hasDecimal) {
+                steps.push(`Separando en parte entera ${integerPart} y parte decimal ${decimalPart.toFixed(10)}`);
+            }
+            
+            // Convertir parte entera
+            if (integerPart === 0) {
+                result = "0";
+                steps.push(`La parte entera es 0`);
+            } else {
+                let intResult = "";
+                let num = integerPart;
+                let step = 1;
+                
+                steps.push(`<br><strong>Convertir parte entera ${integerPart}:</strong>`);
+                
+                while (num > 0) {
+                    const remainder = num % toBase;
+                    let char;
+                    
+                    // Usar el mapeo inverso para obtener el símbolo
+                    if (remainder < REVERSE_MAP.length) {
+                        char = REVERSE_MAP[remainder];
+                    } else {
+                        char = DIGITS[remainder];
+                    }
+                    
+                    steps.push(`Paso ${step}: ${num} ÷ ${toBase} = ${Math.floor(num / toBase)} con residuo ${remainder} (${char})`);
+                    
+                    intResult = char + intResult;
+                    num = Math.floor(num / toBase);
+                    step++;
+                }
+                
+                result = intResult;
+                steps.push(`Parte entera en base ${toBase}: ${intResult}`);
+            }
+            
+            // Convertir parte decimal si existe
+            if (hasDecimal) {
+                let decResult = "";
+                let num = decimalPart;
+                let step = 1;
+                const MAX_DECIMAL_DIGITS = 6; // Máximo de 6 dígitos decimales
+                
+                steps.push(`<br><strong>Convertir parte decimal ${decimalPart.toFixed(10)}:</strong>`);
+                steps.push(`Multiplicamos repetidamente por ${toBase} y tomamos la parte entera de cada resultado:`);
+                
+                for (let i = 0; i < MAX_DECIMAL_DIGITS && num > 0; i++) {
+                    num *= toBase;
+                    const digit = Math.floor(num);
+                    
+                    let char;
+                    if (digit < REVERSE_MAP.length) {
+                        char = REVERSE_MAP[digit];
+                    } else {
+                        char = DIGITS[digit];
+                    }
+                    
+                    steps.push(`Paso ${step}: ${decimalPart.toFixed(10)} × ${toBase} = ${num.toFixed(10)}, parte entera = ${digit} (${char})`);
+                    
+                    decResult += char;
+                    num -= digit;
+                    decimalPart = num;
+                    step++;
+                    
+                    // Si llegamos a cero exacto, podemos terminar
+                    if (num < 0.0000000001) {
+                        break;
+                    }
+                }
+                
+                // Añadir la parte decimal al resultado
+                if (decResult) {
+                    result += "." + decResult;
+                    steps.push(`Parte decimal en base ${toBase}: .${decResult}`);
+                }
+            }
+            
+            // Añadir signo negativo si corresponde
+            if (isNegative) {
+                result = "-" + result;
+                steps.push(`Añadiendo el signo negativo: -${result.substring(1)}`);
+            }
+            
+            steps.push(`<strong>Resultado final en base ${toBase}: ${result}</strong>`);
             
             return {
                 result,
